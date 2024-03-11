@@ -6,13 +6,13 @@ import warnings
 
 import numpy as np
 import cv2
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 
 from helper import (shift_crop_training_sample, crop_sample,
                     Rescale, BoundingBox, cropPadImage, bgr2rgb)
 
 warnings.filterwarnings("ignore")
+
 
 class ALOVDataset(Dataset):
     """ALOV tracking dataset class."""
@@ -312,6 +312,58 @@ class ImageNet_Dataset(Dataset):
         return ans
 
 
+def load_datasets(cfg):
+    """
+    Load ALOV and ImageNet datasets.
+
+    Arguments:
+        cfg: configuration file
+
+    Returns:
+        Dataloader for ALOV and ImageNet datasets
+    """ 
+
+    imagenet_train = ImageNet_Dataset(
+                                split='train',
+                                path_to_img=cfg.paths["imagenet"],
+                                path_to_bb=cfg.paths["imagenetloc"],
+                                bb_params=cfg.bb_params,
+                                transform=None,
+                                input_size=224)
+    
+    imagenet_val = ImageNet_Dataset(
+                                split='val',
+                                path_to_img=cfg.paths["imagenet"],
+                                path_to_bb=cfg.paths["imagenetloc"],
+                                bb_params=cfg.bb_params,
+                                transform=None,
+                                input_size=224)
+
+    alov_train = ALOVDataset(
+                            root_dir=cfg.paths["alov"],
+                            target_dir=cfg.paths["alovloc"],
+                            transform=None,
+                            input_size=227)
+
+    alov_val = ALOVDataset(
+                            root_dir=cfg.paths["alov"], 
+                            target_dir=cfg.paths["alovloc"],
+                            transform=None,
+                            input_size=227)
+    
+    train_dataset = ConcatDataset([imagenet_train, alov_train])
+
+    val_dataset = ConcatDataset([imagenet_val, alov_val])
+
+    train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size,
+                             shuffle=True, num_workers=cfg.num_workers)
+    
+    val_loader = DataLoader(val_dataset, batch_size=cfg.batch_size,
+                                shuffle=True, num_workers=cfg.num_workers)
+    
+    return train_loader, val_loader
+    
+    
 
 
 if __name__ == "__main__":
@@ -333,4 +385,11 @@ if __name__ == "__main__":
     print('Sample shape of previous image =', sample['previmg'].shape)
     print('Sample shape of current image =', sample['currimg'].shape)
     print('Bounding box =', sample['currbb'])
+    print(sample)
+    print(opts)
+    imagenet_loader = DataLoader(imagenet, batch_size=5, shuffle=True, num_workers=1)
+    for i, data in enumerate(imagenet_loader):
+        print(i, data['previmg'].shape, data['currimg'].shape, data['currbb'])
+        if i == 5:
+            break
 

@@ -9,6 +9,7 @@ config = {
         "imagenet": "/nasbrain/datasets/imagenet/images/val",
     },
     "batch_size" : 32,
+    "num_workers" : 4,
 }
 
 cfg = Box(config)
