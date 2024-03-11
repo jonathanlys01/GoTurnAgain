@@ -1,11 +1,4 @@
-import os
-import random as rd
-from typing import Any
 from config import cfg
-import json
-from PIL import Image
-import xml.etree.ElementTree as ET
-from tqdm import tqdm
 
 import os
 import xml.etree.ElementTree as ET
@@ -14,26 +7,30 @@ import warnings
 import numpy as np
 import cv2
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 
 from helper import (shift_crop_training_sample, crop_sample,
                     Rescale, BoundingBox, cropPadImage, bgr2rgb)
 
 warnings.filterwarnings("ignore")
 
-class ILSVRC2014_DET_Dataset(Dataset):
-    """ImageNet 2014 detection dataset class."""
+class ImageNet_Dataset(Dataset):
+    """ImageNet dataset class."""
 
-    def __init__(self, image_dir,
-                 bbox_dir,
+    def __init__(self,
+                 split : str, # train or val
+                 path_to_img,
+                 path_to_bb,
                  bb_params,
                  transform=None,
                  input_size=224):
-        self.image_dir = image_dir
-        self.bbox_dir = bbox_dir
+        self.split = split
+        self.path_to_img = path_to_img
+        self.path_to_bb = path_to_bb
         self.transform = transform
         self.sz = input_size
         self.bb_params = bb_params
-        self.x, self.y = self._parse_data(self.image_dir, self.bbox_dir)
+        self.x, self.y = self._parse_data(self.cfg.paths["imagenet"], self.cfg.paths["imagenetloc"])
 
     def __getitem__(self, idx):
         sample = self.get_sample(idx)
@@ -44,20 +41,47 @@ class ILSVRC2014_DET_Dataset(Dataset):
     def __len__(self):
         return self.len
 
-    def get_bb(self, bbox_filepath):
-        tree = ET.parse(bbox_filepath)
-        root = tree.getroot()
-        sz = [float(root.find('size').find('width').text),
-              float(root.find('size').find('height').text)]
-        bboxes = []
-        for obj in root.findall('object'):
-            xmin = obj.find('bndbox').find('xmin').text
-            ymin = obj.find('bndbox').find('ymin').text
-            xmax = obj.find('bndbox').find('xmax').text
-            ymax = obj.find('bndbox').find('ymax').text
-            bbox = [float(xmin), float(ymin), float(xmax), float(ymax)]
-            bboxes.append(bbox)
-        return sz, bboxes
+    def _parse_data(self, image_dir, bbox_dir):
+        print('Parsing ImageNet dataset...')
+        classes = os.listdir(image_dir)
+        x = []  # contains path to image files
+        y = []  # contains bounding boxes
+        x_dict = {}
+        y_dict =self.get_bb(bbox_dir)
+        for _class in classes:
+            class_folder = os.path.join(image_dir, _class)
+            for img in os.listdir(class_folder):
+                x_dict[img] = os.path.join(class_folder, img)
+    
+        for img in x_dict:
+            if img in y_dict:
+                x.append(x_dict[img])
+                y.append(y_dict[img])
+        self.len = len(y)
+        print('ImageNet dataset parsing done.')
+        # should return 239283
+        print('Total number of annotations in ImageNet dataset =', self.len)
+        return x, y
+
+
+    def get_bb(self, bbox_dir):
+        bboxes = {}
+        bbox_filepath = os.path.join(bbox_dir, "LOC_val_solution.csv")
+        with open (bbox_filepath, "r") as f:
+            lines = f.readlines()
+            for line in lines[1:]:
+                # take the five first words
+                img, annotation_line = line.split(",")
+                classe = annotation_line.split(" ")[0]
+                # bbox are 4 words, it can be more than 1 bbox per image
+                # now we want to list all the bboxes with x_max, x_min, y_max, y_min
+                bbox = []
+                annotations_parsed = annotation_line.split(" ")[:-1]
+                for i in range(0, len(annotations_parsed), 5):
+                    bbox.append((annotations_parsed[i], (int(annotations_parsed[i+1]), int(
+                        annotations_parsed[i+2]), int(annotations_parsed[i+3]), int(annotations_parsed[i+4]))))
+                bboxes[img] = bbox 
+        return bboxes
 
     def get_sample(self, idx):
         """
@@ -93,7 +117,7 @@ class ILSVRC2014_DET_Dataset(Dataset):
         sample = {'image': curr, 'bb': currbb}
         return sample
 
-    def filter_ann(self, sz, ann):
+    def filter_ann(self, ann):
         """
         Given list of ImageNet object annotations, filter objects which
         cover atleast 66% of the image in either dimension.
@@ -104,75 +128,28 @@ class ILSVRC2014_DET_Dataset(Dataset):
             an_height = an[3]-an[1]
             area_constraint = an_width > 0 and \
                 an_height > 0 and an_width*an_height > 0
-            if an_width <= (0.66)*sz[0] and \
-               an_height <= (0.66)*sz[1] and \
+            if an_width <= (0.66)*self.sz[0] and \
+               an_height <= (0.66)*self.sz[1] and \
                area_constraint:
                 ans.append(an)
         return ans
 
-    def _parse_data(self, image_dir, bbox_dir):
-        print('Parsing ImageNet dataset...')
-        folders = os.listdir(image_dir)
-        x = []  # contains path to image files
-        y = []  # contains bounding boxes
-        for folder in folders:
-            images = os.listdir(os.path.join(image_dir, folder))
-            bboxes = os.listdir(os.path.join(bbox_dir, folder))
-            images.sort()
-            bboxes.sort()
-            images = [os.path.join(os.path.join(image_dir, folder), image)
-                      for image in images]
-            bboxes = [os.path.join(os.path.join(bbox_dir, folder), bbox)
-                      for bbox in bboxes]
-            annotations = []
-            for bbox, image in zip(bboxes, images):
-                sz, ann = self.get_bb(bbox)
-                # filter bounding boxes
-                ann = self.filter_ann(sz, ann)
-                if ann:
-                    annotations.extend(ann)
-                    length = len(ann)*[image]
-                    x.extend(length)
-            if annotations:
-                y.extend(annotations)
-        self.len = len(y)
-        print('ImageNet dataset parsing done.')
-        # should return 239283
-        print('Total number of annotations in ImageNet dataset =', self.len)
-        return x, y
 
-    def display_object(self, idx):
-        """
-        Helper function to display image at a particular index with grounttruth
-        bounding box.
-        """
-        sample = self.get_orig_sample(idx)
-        image = sample['image']
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        bb = sample['bb']
-        bb = [int(val) for val in bb]
-        image = cv2.rectangle(image, (bb[0], bb[1]), (bb[2], bb[3]),
-                              (0, 255, 0), 2)
-        cv2.imshow('imagenet dataset sample: ' + str(idx), image)
-        cv2.waitKey(0)
 
-    def show_sample(self, idx):
-        """
-        Helper function to display sample, which is passed to GOTURN.
-        Shows previous frame and current frame with bounding box.
-        """
-        x, _ = self.get_sample(idx)
-        prev_image = x['previmg']
-        curr_image = x['currimg']
-        bb = x['currbb']
-        bbox = BoundingBox(bb[0], bb[1], bb[2], bb[3])
-        bbox.unscale(curr_image)
-        bb = bbox.get_bb_list()
-        bb = [int(val) for val in bb]
-        prev_image = cv2.cvtColor(prev_image, cv2.COLOR_RGB2BGR)
-        curr_image = cv2.cvtColor(curr_image, cv2.COLOR_RGB2BGR)
-        curr_image = cv2.rectangle(curr_image, (bb[0], bb[1]), (bb[2], bb[3]),
-                                   (0, 255, 0), 2)
-        concat_image = np.hstack((prev_image, curr_image))
-        cv2.imshow('imagenet dataset sample: ' + str(idx), concat_image)
-        cv2.waitKey(0)
+
+if __name__ == "__main__":
+    # test the dataset
+    bb_params = {}
+    bb_params['lambda_shift_frac'] = 5
+    bb_params['lambda_scale_frac'] = 15
+    bb_params['min_scale'] = -0.4
+    bb_params['max_scale'] = 0.4
+    imagenet = ImageNet_Dataset(
+                                split='train',
+                                path_to_img=cfg.paths["imagenet"],
+                                path_to_bb=cfg.paths["imagenetloc"],
+                                bb_params=bb_params,
+                                transform=None,
+                                input_size=224)
+    print('Total number of samples in dataset =', len(imagenet))
+

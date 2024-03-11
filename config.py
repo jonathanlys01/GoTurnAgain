@@ -6,6 +6,7 @@ config = {
     "wandb" : False,
     "paths" : {
         "imagenetloc" : "/nasbrain/datasets/imagenetloc/",
+        "imagenet": "/nasbrain/datasets/imagenet/images/val",
     },
     "batch_size" : 32,
 }
