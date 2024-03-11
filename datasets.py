@@ -30,7 +30,7 @@ class ImageNet_Dataset(Dataset):
         self.transform = transform
         self.sz = input_size
         self.bb_params = bb_params
-        self.x, self.y = self._parse_data(self.cfg.paths["imagenet"], self.cfg.paths["imagenetloc"])
+        self.x, self.y = self._parse_data(cfg.paths["imagenet"], cfg.paths["imagenetloc"])
 
     def __getitem__(self, idx):
         sample = self.get_sample(idx)
@@ -47,12 +47,12 @@ class ImageNet_Dataset(Dataset):
         x = []  # contains path to image files
         y = []  # contains bounding boxes
         x_dict = {}
-        y_dict =self.get_bb(bbox_dir)
+        y_dict = self.get_bb(bbox_dir)
         for _class in classes:
             class_folder = os.path.join(image_dir, _class)
             for img in os.listdir(class_folder):
-                x_dict[img] = os.path.join(class_folder, img)
-    
+                img_without_ext = img.split('.')[0]
+                x_dict[img_without_ext] = os.path.join(class_folder, img)
         for img in x_dict:
             if img in y_dict:
                 x.append(x_dict[img])
@@ -75,11 +75,8 @@ class ImageNet_Dataset(Dataset):
                 classe = annotation_line.split(" ")[0]
                 # bbox are 4 words, it can be more than 1 bbox per image
                 # now we want to list all the bboxes with x_max, x_min, y_max, y_min
-                bbox = []
                 annotations_parsed = annotation_line.split(" ")[:-1]
-                for i in range(0, len(annotations_parsed), 5):
-                    bbox.append((annotations_parsed[i], (int(annotations_parsed[i+1]), int(
-                        annotations_parsed[i+2]), int(annotations_parsed[i+3]), int(annotations_parsed[i+4]))))
+                bbox = [ int(annotations_parsed[1]), int(annotations_parsed[2]), int(annotations_parsed[3]), int(annotations_parsed[4])]
                 bboxes[img] = bbox 
         return bboxes
 
@@ -152,4 +149,8 @@ if __name__ == "__main__":
                                 transform=None,
                                 input_size=224)
     print('Total number of samples in dataset =', len(imagenet))
+    sample, opts = imagenet.get_sample(0)
+    print('Sample shape of previous image =', sample['previmg'].shape)
+    print('Sample shape of current image =', sample['currimg'].shape)
+    print('Bounding box =', sample['currbb'])
 
