@@ -19,7 +19,9 @@ output_csv = os.path.join('data/alov300_split.csv')
 
 # Get the list of all video directories
 video_dirs = [d for d in os.listdir(alov_path) if os.path.isdir(os.path.join(alov_path, d))]
-video_paths = [os.path.join(video_dirs, d) for video_dir in video_dirs for d in os.listdir(video_dir)]
+video_paths = []
+for video_dir in video_dirs:
+    video_paths.extend([os.path.join(video_dir, d) for d in os.listdir(os.path.join(alov_path, video_dir)) if os.path.isdir(os.path.join(alov_path, video_dir, d))])
 num_videos = len(video_paths)
 
 # Split the videos into training and validation sets (70% train, 30% val)
