@@ -320,20 +320,16 @@ def load_datasets(cfg):
     """ 
 
     imagenet_train = ImageNetDataset(split='train')
-    
-    imagenet_val = ImageNetDataset(split='val')
 
     alov_train = ALOVDataset()
 
     train_dataset = ConcatDataset([imagenet_train, alov_train])
 
-    val_dataset = imagenet_val
-
     train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size,
                              shuffle=True, num_workers=cfg.num_workers)
     
-    val_loader = DataLoader(val_dataset, batch_size=cfg.batch_size,
-                                shuffle=True, num_workers=cfg.num_workers)
+    # todo: implement val_loader
+    val_loader = None
     
     return train_loader, val_loader
     
