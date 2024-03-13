@@ -44,6 +44,30 @@ class ALOVDataset(Dataset):
         sample = to_tensor(sample)
         return sample
 
+
+    def _parse_train_valid_split(self):
+        """
+        Parses ALOV300++ train and validation split from CSV file.
+
+        Returns:
+            train_split: set of video names in training set
+            valid_split: set of video names in validation set
+        """
+        train_valid_split_csv = os.path.join('data/alov300_split.csv')
+        train_split = set()
+        valid_split = set()
+        with open(train_valid_split_csv, 'r') as f:
+            # skip header
+            next(f)
+            for line in f:
+                line = line.strip().split(',')
+                if line[1] == 'train':
+                    train_split.add(line[0])
+                else:
+                    valid_split.add(line[0])
+        return train_split, valid_split
+    
+
     def _parse_data(self, root_dir, target_dir, split):
         """
         Parses ALOV dataset and builds tuples of (template, search region)
@@ -51,6 +75,7 @@ class ALOVDataset(Dataset):
         """
         x = []
         y = []
+        train_split, valid_split = self._parse_train_valid_split()
         envs = os.listdir(target_dir)
         num_anno = 0
         print('Parsing ALOV dataset...')
@@ -58,6 +83,10 @@ class ALOVDataset(Dataset):
             env_videos = os.listdir(root_dir + env)
             for vid in env_videos:
                 if vid in self.exclude:
+                    continue
+                if split == 'train' and vid not in train_split:
+                    continue
+                if split == 'val' and vid not in valid_split:
                     continue
                 vid_src = self.root_dir + env + "/" + vid
                 vid_ann = self.target_dir + env + "/" + vid + ".ann"
