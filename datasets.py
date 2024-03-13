@@ -29,8 +29,9 @@ class ALOVDataset(Dataset):
         self.root_dir = os.path.join(cfg.paths["alov"], 'imagedata++/')
         self.target_dir = os.path.join(cfg.paths["alov"],  'alov300++_rectangleAnnotation_full/')
         self.input_size = cfg.input_size
+        self.split = split
         self.transform = transform
-        self.x, self.y = self._parse_data(self.root_dir, self.target_dir)
+        self.x, self.y = self._parse_data(self.root_dir, self.target_dir, self.split)
         self.len = len(self.y)
 
     def __len__(self):
@@ -43,7 +44,7 @@ class ALOVDataset(Dataset):
         sample = to_tensor(sample)
         return sample
 
-    def _parse_data(self, root_dir, target_dir):
+    def _parse_data(self, root_dir, target_dir, split):
         """
         Parses ALOV dataset and builds tuples of (template, search region)
         tuples from consecutive annotated frames.
@@ -234,7 +235,7 @@ class ImageNetDataset(Dataset):
             for img in os.listdir(image_dir):
                 img_without_ext = img.split('.')[0]
                 x_dict[img_without_ext] = os.path.join(image_dir, img)
-                
+
         for img in x_dict:
             if img in y_dict:
                 x.append(x_dict[img])
