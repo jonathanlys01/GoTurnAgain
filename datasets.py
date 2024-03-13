@@ -359,11 +359,11 @@ def load_datasets(cfg):
     imagenet_val = ImageNetDataset(split='val')
 
     alov_train = ALOVDataset(split='train')
-    # alov_val = ALOVDataset(split='val')
+    alov_val = ALOVDataset(split='val')
 
     train_dataset = ConcatDataset([imagenet_train, alov_train])
 
-    val_dataset = imagenet_val # todo : add alov_val
+    val_dataset = ConcatDataset([imagenet_val, alov_val])
 
     train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size,
                              shuffle=True, num_workers=cfg.num_workers)
@@ -391,11 +391,10 @@ def test_alov():
     print('Sample shape of current image =', sample['currimg'].shape)
 
 def test_load_datasets():
-    train_loader, _ = load_datasets(cfg)
+    train_loader, val_loader = load_datasets(cfg)
     print('Number of samples in train loader =', len(train_loader))
+    print('Number of samples in val loader =', len(val_loader))
 
 if __name__ == "__main__":
-    test_imagenet()
-    test_alov()
     test_load_datasets()
 
