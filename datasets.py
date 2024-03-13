@@ -351,9 +351,8 @@ def test_alov():
     print('Sample shape of current image =', sample['currimg'].shape)
 
 def test_load_datasets():
-    train_loader, val_loader = load_datasets(cfg)
+    train_loader, _ = load_datasets(cfg)
     print('Number of samples in train loader =', len(train_loader))
-    print('Number of samples in val loader =', len(val_loader))
 
 if __name__ == "__main__":
     test_imagenet()
