@@ -7,7 +7,7 @@ config = {
     "paths" : {
         "imagenetloc" : "/mnt/data/imagenet",
         "imagenet": "/mnt/data/imagenet/ILSVRC/Data/CLS-LOC",
-        "alov": " /mnt/data/alov300pp/",
+        "alov": "/mnt/data/alov300pp/",
     },
     "batch_size" : 32,
     "num_workers" : 4,
