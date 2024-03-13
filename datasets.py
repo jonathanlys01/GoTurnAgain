@@ -354,7 +354,7 @@ def test_imagenet():
     print('Sample shape of current image =', sample['currimg'].shape)
 
 def test_alov():
-    alov = ALOVDataset()
+    alov = ALOVDataset(split='train')
     print('Total number of samples in dataset =', len(alov))
     sample, opts = alov.get_sample(0)
     print('Sample shape of previous image =', sample['previmg'].shape)
