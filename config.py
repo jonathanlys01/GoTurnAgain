@@ -5,11 +5,18 @@ config = {
     "log":False,
     "wandb" : False,
     "paths" : {
-        "imagenetloc" : "/nasbrain/datasets/imagenetloc/",
-        "imagenet": "/nasbrain/datasets/imagenet/images/val",
+        "imagenetloc" : "/mnt/data/imagenet",
+        "imagenet": "/mnt/data/imagenet/ILSVRC/Data/CLS-LOC",
     },
     "batch_size" : 32,
     "num_workers" : 4,
+    "bb_params": {
+        "lambda_shift_frac": 5,
+        "lambda_scale_frac": 15,
+        "min_scale": -0.4,
+        "max_scale": 0.4,
+    },
+    "input_size" : 224
 }
 
 cfg = Box(config)

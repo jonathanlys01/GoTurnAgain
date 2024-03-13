@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 class ALOVDataset(Dataset):
     """ALOV tracking dataset class."""
 
-    def __init__(self, root_dir, target_dir, transform=None, input_size=227):
+    def __init__(self, transform=None):
         super(ALOVDataset, self).__init__()
         self.exclude = ['01-Light_video00016',
                         '01-Light_video00022',
@@ -26,11 +26,11 @@ class ALOVDataset(Dataset):
                         '03-Specularity_video00003',
                         '03-Specularity_video00012',
                         '10-LowContrast_video00013']
-        self.root_dir = root_dir
-        self.target_dir = target_dir
-        self.input_size = input_size
+        self.root_dir = os.path.join(cfg.paths["alov"], 'imagedata++/')
+        self.target_dir = os.path.join(cfg.paths["alov"],  'alov300++_rectangleAnnotation_full/')
+        self.input_size = cfg.input_size
         self.transform = transform
-        self.x, self.y = self._parse_data(root_dir, target_dir)
+        self.x, self.y = self._parse_data(self.root_dir, self.target_dir)
         self.len = len(self.y)
 
     def __len__(self):
@@ -199,18 +199,12 @@ class ImageNet_Dataset(Dataset):
 
     def __init__(self,
                  split : str, # train or val
-                 path_to_img,
-                 path_to_bb,
-                 bb_params,
-                 transform=None,
-                 input_size=224):
+                 transform=None):
         self.split = split
-        self.path_to_img = path_to_img
-        self.path_to_bb = path_to_bb
         self.transform = transform
-        self.sz = input_size
-        self.bb_params = bb_params
-        self.x, self.y = self._parse_data(cfg.paths["imagenet"], cfg.paths["imagenetloc"])
+        self.sz = cfg.input_size
+        self.bb_params = cfg.bb_params
+        self.x, self.y = self._parse_data(os.path.join(cfg.paths["imagenet"], self.split), cfg.paths["imagenetloc"])
 
     def __getitem__(self, idx):
         sample = self.get_sample(idx)
@@ -246,7 +240,7 @@ class ImageNet_Dataset(Dataset):
 
     def get_bb(self, bbox_dir):
         bboxes = {}
-        bbox_filepath = os.path.join(bbox_dir, "LOC_val_solution.csv")
+        bbox_filepath = os.path.join(bbox_dir, f"LOC_{self.split}_solution.csv")
         with open (bbox_filepath, "r") as f:
             lines = f.readlines()
             for line in lines[1:]:
@@ -323,37 +317,15 @@ def load_datasets(cfg):
         Dataloader for ALOV and ImageNet datasets
     """ 
 
-    imagenet_train = ImageNet_Dataset(
-                                split='train',
-                                path_to_img=cfg.paths["imagenet"],
-                                path_to_bb=cfg.paths["imagenetloc"],
-                                bb_params=cfg.bb_params,
-                                transform=None,
-                                input_size=224)
+    imagenet_train = ImageNet_Dataset(split='train')
     
-    imagenet_val = ImageNet_Dataset(
-                                split='val',
-                                path_to_img=cfg.paths["imagenet"],
-                                path_to_bb=cfg.paths["imagenetloc"],
-                                bb_params=cfg.bb_params,
-                                transform=None,
-                                input_size=224)
+    imagenet_val = ImageNet_Dataset(split='val')
 
-    alov_train = ALOVDataset(
-                            root_dir=cfg.paths["alov"],
-                            target_dir=cfg.paths["alovloc"],
-                            transform=None,
-                            input_size=227)
+    alov_train = ALOVDataset()
 
-    alov_val = ALOVDataset(
-                            root_dir=cfg.paths["alov"], 
-                            target_dir=cfg.paths["alovloc"],
-                            transform=None,
-                            input_size=227)
-    
     train_dataset = ConcatDataset([imagenet_train, alov_train])
 
-    val_dataset = ConcatDataset([imagenet_val, alov_val])
+    val_dataset = imagenet_val
 
     train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size,
                              shuffle=True, num_workers=cfg.num_workers)
@@ -368,18 +340,7 @@ def load_datasets(cfg):
 
 if __name__ == "__main__":
     # test the dataset
-    bb_params = {}
-    bb_params['lambda_shift_frac'] = 5
-    bb_params['lambda_scale_frac'] = 15
-    bb_params['min_scale'] = -0.4
-    bb_params['max_scale'] = 0.4
-    imagenet = ImageNet_Dataset(
-                                split='train',
-                                path_to_img=cfg.paths["imagenet"],
-                                path_to_bb=cfg.paths["imagenetloc"],
-                                bb_params=bb_params,
-                                transform=None,
-                                input_size=224)
+    imagenet = ImageNet_Dataset(split='train')
     print('Total number of samples in dataset =', len(imagenet))
     sample, opts = imagenet.get_sample(0)
     print('Sample shape of previous image =', sample['previmg'].shape)
