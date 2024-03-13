@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 class ALOVDataset(Dataset):
     """ALOV tracking dataset class."""
 
-    def __init__(self, transform=None):
+    def __init__(self, split, transform=None):
         super(ALOVDataset, self).__init__()
         self.exclude = ['01-Light_video00016',
                         '01-Light_video00022',
@@ -224,11 +224,17 @@ class ImageNetDataset(Dataset):
         y = []  # contains bounding boxes
         x_dict = {}
         y_dict = self.get_bb(bbox_dir)
-        for _class in classes:
-            class_folder = os.path.join(image_dir, _class)
-            for img in os.listdir(class_folder):
+        if self.split == 'train':
+            for _class in classes:
+                class_folder = os.path.join(image_dir, _class)
+                for img in os.listdir(class_folder):
+                    img_without_ext = img.split('.')[0]
+                    x_dict[img_without_ext] = os.path.join(class_folder, img)
+        else: # val (there are no subfolders)
+            for img in os.listdir(image_dir):
                 img_without_ext = img.split('.')[0]
-                x_dict[img_without_ext] = os.path.join(class_folder, img)
+                x_dict[img_without_ext] = os.path.join(image_dir, img)
+                
         for img in x_dict:
             if img in y_dict:
                 x.append(x_dict[img])
@@ -320,16 +326,20 @@ def load_datasets(cfg):
     """ 
 
     imagenet_train = ImageNetDataset(split='train')
+    imagenet_val = ImageNetDataset(split='val')
 
-    alov_train = ALOVDataset()
+    alov_train = ALOVDataset(split='train')
+    # alov_val = ALOVDataset(split='val')
 
     train_dataset = ConcatDataset([imagenet_train, alov_train])
+
+    val_dataset = imagenet_val # todo : add alov_val
 
     train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size,
                              shuffle=True, num_workers=cfg.num_workers)
     
-    # todo: implement val_loader
-    val_loader = None
+    val_loader = DataLoader(val_dataset, batch_size=cfg.batch_size,
+                                shuffle=True, num_workers=cfg.num_workers)
     
     return train_loader, val_loader
     
