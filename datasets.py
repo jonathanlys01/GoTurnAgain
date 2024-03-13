@@ -194,7 +194,7 @@ class ALOVDataset(Dataset):
         cv2.waitKey(0)
 
 
-class ImageNet_Dataset(Dataset):
+class ImageNetDataset(Dataset):
     """ImageNet dataset class."""
 
     def __init__(self,
@@ -317,9 +317,9 @@ def load_datasets(cfg):
         Dataloader for ALOV and ImageNet datasets
     """ 
 
-    imagenet_train = ImageNet_Dataset(split='train')
+    imagenet_train = ImageNetDataset(split='train')
     
-    imagenet_val = ImageNet_Dataset(split='val')
+    imagenet_val = ImageNetDataset(split='val')
 
     alov_train = ALOVDataset()
 
@@ -338,19 +338,21 @@ def load_datasets(cfg):
     
 
 
-if __name__ == "__main__":
-    # test the dataset
-    imagenet = ImageNet_Dataset(split='train')
+def test_imagenet():
+    imagenet = ImageNetDataset(split='train')
     print('Total number of samples in dataset =', len(imagenet))
     sample, opts = imagenet.get_sample(0)
     print('Sample shape of previous image =', sample['previmg'].shape)
     print('Sample shape of current image =', sample['currimg'].shape)
-    print('Bounding box =', sample['currbb'])
-    print(sample)
-    print(opts)
-    imagenet_loader = DataLoader(imagenet, batch_size=5, shuffle=True, num_workers=1)
-    for i, data in enumerate(imagenet_loader):
-        print(i, data['previmg'].shape, data['currimg'].shape, data['currbb'])
-        if i == 5:
-            break
+
+def test_alov():
+    alov = ALOVDataset()
+    print('Total number of samples in dataset =', len(alov))
+    sample, opts = alov.get_sample(0)
+    print('Sample shape of previous image =', sample['previmg'].shape)
+    print('Sample shape of current image =', sample['currimg'].shape)
+
+if __name__ == "__main__":
+   test_imagenet()
+   test_alov()
 
