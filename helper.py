@@ -61,6 +61,24 @@ class NormalizeToTensor(object):
                     'currimg': curr_img}
 
 
+def to_tensor(sample):
+    prev_img, curr_img = sample['previmg'], sample['currimg']
+    transform = transforms.Compose([transforms.ToTensor(),
+                                     transforms.Normalize(
+         mean=[0.485, 0.456, 0.406],
+         std=[0.229, 0.224, 0.225])
+         ])
+    prev_img = transform(prev_img)
+    curr_img = transform(curr_img)
+    if 'currbb' in sample:
+        currbb = np.array(sample['currbb'])
+        return {'previmg': prev_img,
+                'currimg': curr_img,
+                'currbb': torch.from_numpy(currbb).float()}
+    else:
+        return {'previmg': prev_img,
+                'currimg': curr_img}
+    
 def bgr2rgb(image):
     if image.ndim == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)

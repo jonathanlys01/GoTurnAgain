@@ -12,7 +12,7 @@ import numpy as np
 import model
 # from torchsummary import summary
 
-from datasets import ALOVDataset, ImageNet_Dataset
+from datasets import ALOVDataset, ImageNetDataset
 from helper import (Rescale, shift_crop_training_sample,
                     crop_sample, NormalizeToTensor)
 
@@ -93,14 +93,12 @@ def main():
                        'alov300++_rectangleAnnotation_full/'),
                        transform, input_size)'''
     
-    imagenet = ImageNet_Dataset(split='train',
-                                path_to_img=cfg.paths['imagenet'],
-                                path_to_bb=cfg.paths['imagenetloc'],
-                                bb_params=bb_params,
-                                transform=transform,
-                                input_size=input_size)
+    imagenet = ImageNetDataset(split='train')
+    alov = ALOVDataset(split='train')
+
+                    
     # list of datasets to train on
-    datasets = [imagenet]
+    datasets = [imagenet, alov]
 
     # load model
     net = model.GoNet().to(device)

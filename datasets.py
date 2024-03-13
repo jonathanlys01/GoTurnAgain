@@ -9,7 +9,7 @@ import cv2
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 
 from helper import (shift_crop_training_sample, crop_sample,
-                    Rescale, BoundingBox, cropPadImage, bgr2rgb)
+                    Rescale, BoundingBox, cropPadImage, bgr2rgb, to_tensor)
 
 warnings.filterwarnings("ignore")
 
@@ -40,6 +40,7 @@ class ALOVDataset(Dataset):
         sample, _ = self.get_sample(idx)
         if (self.transform):
             sample = self.transform(sample)
+        sample = to_tensor(sample)
         return sample
 
     def _parse_data(self, root_dir, target_dir):
@@ -210,6 +211,7 @@ class ImageNetDataset(Dataset):
         sample = self.get_sample(idx)
         if (self.transform):
             sample = self.transform(sample)
+        sample = to_tensor(sample)
         return sample
 
     def __len__(self):
@@ -352,7 +354,13 @@ def test_alov():
     print('Sample shape of previous image =', sample['previmg'].shape)
     print('Sample shape of current image =', sample['currimg'].shape)
 
+def test_load_datasets():
+    train_loader, val_loader = load_datasets(cfg)
+    print('Number of samples in train loader =', len(train_loader))
+    print('Number of samples in val loader =', len(val_loader))
+
 if __name__ == "__main__":
-   test_imagenet()
-   test_alov()
+    test_imagenet()
+    test_alov()
+    test_load_datasets()
 
