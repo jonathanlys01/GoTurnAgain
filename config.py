@@ -3,11 +3,11 @@ from pprint import pprint
 
 config = {
     "log":False,
-    "wandb" : False,
+    "wandb" : True,
     "paths" : {
-        "imagenetloc" : "/mnt/data/imagenet",
-        "imagenet": "/mnt/data/imagenet/ILSVRC/Data/CLS-LOC",
-        "alov": "/users/local/alov300pp/", 
+        "imagenetloc" : "/users/local/imagenet",
+        "imagenet" : "/users/local/imagenet",
+        "alov" : "/users/local/alov300pp",
     },
     "batch_size" : 32,
     "num_workers" : 4,
