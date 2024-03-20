@@ -3,7 +3,7 @@ from pprint import pprint
 
 config = {
     "log":False,
-    "wandb" : False,
+    "wandb" : True,
     "paths" : {
         "imagenetloc" : "/users/local/imagenet",
         "imagenet" : "/users/local/imagenet",
