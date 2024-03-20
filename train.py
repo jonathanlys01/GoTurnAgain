@@ -33,6 +33,8 @@ parser = argparse.ArgumentParser(description='GOTURN Training')
 # parse wandb
 parser.add_argument('-w', '--wandb', action='store_true', default=False,
                     help='use wandb for logging')
+parser.add_argument('-m', '--message', type=str, default='',
+                    help='message for wandb')
 parser.add_argument('-n', '--num-batches', default=500000, type=int,
                     help='number of total batches to run')
 parser.add_argument('-lr', '--learning-rate', default=1e-5, type=float,
@@ -78,7 +80,7 @@ def main():
     kSaveModel = args.save_freq
     if args.wandb:
         wandb.login()
-        wandb.init(project='goturnagain', entity='procom', notes="testing")
+        wandb.init(project='goturnagain', entity='procom', notes=args.message)
         wandb.config.update(cfg)
 
     np.random.seed(args.manual_seed)
@@ -107,7 +109,7 @@ def main():
     datasets = [imagenet, alov]
 
     # load model
-    net = model.FasterGTA()
+    net = model.FasterGTA().to(device)
     # summary(net, [(3, 224, 224), (3, 224, 224)])
     loss_fn = torch.nn.L1Loss(size_average=False).to(device)
 
