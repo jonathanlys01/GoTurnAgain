@@ -68,9 +68,9 @@ def get_fasterrccnn_mobilenet_backbone():
     backbone = torch.nn.Sequential(*layers[:2])
     return backbone
 
-class GoNetFasterRCNN(nn.Module):
+class FasterGTA(nn.Module):
     def __init__(self):
-        super(GoNetFasterRCNN, self).__init__()
+        super(FasterGTA, self).__init__()
         self.backbone = FasterRCNN()
         self.classifier = nn.Sequential(
                 nn.Linear(512*10*10*2, 4096),

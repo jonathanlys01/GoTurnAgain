@@ -103,7 +103,7 @@ def main():
     datasets = [imagenet, alov]
 
     # load model
-    net = model.GoNet().to(device)
+    net = model.FasterGTA().to(device)
     # summary(net, [(3, 224, 224), (3, 224, 224)])
     loss_fn = torch.nn.L1Loss(size_average=False).to(device)
 
