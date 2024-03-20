@@ -11,6 +11,8 @@ import torch.optim as optim
 import numpy as np
 import model
 # from torchsummary import summary
+# wanddb
+import wandb
 
 from datasets import ALOVDataset, ImageNetDataset
 from helper import (Rescale, shift_crop_training_sample,
@@ -21,14 +23,14 @@ cuda = torch.cuda.is_available()
 device = torch.device('cuda:0' if cuda else 'cpu')
 input_size = 224
 kSaveModel = 20000  # save model after every 20000 steps
-batchSize = 50  # number of samples in a batch
+batchSize = 128  # number of samples in a batch
 kGeneratedExamplesPerImage = 10  # generate 10 synthetic samples per image
 transform = NormalizeToTensor()
 bb_params = {}
-enable_tensorboard = False
-if enable_tensorboard:
-    from tensorboardX import SummaryWriter
-    writer = SummaryWriter()
+if cfg['wandb']:
+    wandb.login()
+    wandb.init(project='goturn-pytorch', entity='jovillios', notes="testing")
+    wandb.config.update(cfg)
 
 args = None
 parser = argparse.ArgumentParser(description='GOTURN Training')
@@ -287,8 +289,8 @@ def train_model(model, datasets, criterion, optimizer):
                 del(train_batch)
                 st = time.time()
 
-                if enable_tensorboard:
-                    writer.add_scalar('train/batch_loss', curr_loss, itr)
+                if cfg['wandb']:
+                    wandb.log({'train/batch_loss': curr_loss})
 
                 if itr > 0 and itr % kSaveModel == 0:
                     path = os.path.join(args.save_directory,
@@ -309,9 +311,6 @@ def train_model(model, datasets, criterion, optimizer):
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    if enable_tensorboard:
-        writer.export_scalars_to_json("./all_scalars.json")
-        writer.close()
     return model
 
 

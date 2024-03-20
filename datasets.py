@@ -41,7 +41,6 @@ class ALOVDataset(Dataset):
         sample, _ = self.get_sample(idx)
         if (self.transform):
             sample = self.transform(sample)
-        sample = to_tensor(sample)
         return sample
 
 
@@ -241,7 +240,6 @@ class ImageNetDataset(Dataset):
         sample = self.get_sample(idx)
         if (self.transform):
             sample = self.transform(sample)
-        sample = to_tensor(sample)
         return sample
 
     def __len__(self):
