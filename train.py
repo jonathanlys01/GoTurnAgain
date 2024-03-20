@@ -107,7 +107,7 @@ def main():
     datasets = [imagenet, alov]
 
     # load model
-    net = model.FasterGTA().to(device)
+    net = model.GoNet().to(device)
     # summary(net, [(3, 224, 224), (3, 224, 224)])
     loss_fn = torch.nn.L1Loss(size_average=False).to(device)
 
@@ -226,7 +226,7 @@ def train_model(model, datasets, criterion, optimizer):
             print("=> loading checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
             start_itr = checkpoint['itr']
-            model.load_state_dict(checkpoint['state_dict'])
+            model.classifier.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
             num_running_batch = checkpoint['num_running_batch']
@@ -297,6 +297,7 @@ def train_model(model, datasets, criterion, optimizer):
                     wandb.log({'train/batch_loss': curr_loss})
 
                 if itr > 0 and itr % kSaveModel == 0:
+                    print('Saving model at iteration %d' % (itr))
                     path = os.path.join(args.save_directory,
                                         'model_itr_' + str(itr) + '_loss_' +
                                         str(round(curr_loss, 3)) + '.pth.tar')
@@ -304,7 +305,7 @@ def train_model(model, datasets, criterion, optimizer):
                                      'np_rand_state': np.random.get_state(),
                                      'torch_rand_state': torch.get_rng_state(),
                                      'l1_loss': curr_loss,
-                                     'state_dict': model.state_dict(),
+                                     'state_dict': model.classifier.state_dict(),
                                      'optimizer': optimizer.state_dict(),
                                      'scheduler': scheduler.state_dict(),
                                      'num_running_batch': num_running_batch,
