@@ -355,15 +355,17 @@ def load_datasets(cfg):
         Dataloader for ALOV and ImageNet datasets
     """ 
 
-    imagenet_train = ImageNetDataset(split='train')
-    imagenet_val = ImageNetDataset(split='val')
+    #imagenet_train = ImageNetDataset(split='train')
+    #imagenet_val = ImageNetDataset(split='val')
 
     alov_train = ALOVDataset(split='train')
     alov_val = ALOVDataset(split='val')
 
-    train_dataset = ConcatDataset([imagenet_train, alov_train])
+    """train_dataset = ConcatDataset([imagenet_train, alov_train])
 
-    val_dataset = ConcatDataset([imagenet_val, alov_val])
+    val_dataset = ConcatDataset([imagenet_val, alov_val])"""
+    train_dataset = alov_train
+    val_dataset = alov_val
 
     train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size,
                              shuffle=True, num_workers=cfg.num_workers)
