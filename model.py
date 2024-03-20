@@ -92,9 +92,23 @@ class FasterGTA(nn.Module):
                 m.weight.data.normal_(0, 0.005)
     def forward(self, x, y):
         x1 = self.backbone(x)
+        print(x1.shape)
+        exit()
         x1 = x1.view(x.size(0), 256*6*6)
         x2 = self.backbone(y)
         x2 = x2.view(x.size(0), 256*6*6)
         x = torch.cat((x1, x2), 1)
         x = self.classifier(x)
         return x
+
+if __name__ == "__main__":
+    from datasets import load_datasets
+    from config import cfg
+    model = FasterGTA()
+    train_loader, test_loader = load_datasets(cfg)
+    data = next(iter(train_loader))
+    img1 = data["previmg"]
+    img2 = data["currimg"]
+    out = model(img1, img2)
+    print(out.shape)
+    

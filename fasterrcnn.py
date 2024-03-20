@@ -7,9 +7,11 @@ class FasterRCNN(nn.Module):
         model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True)
         model.eval()
         layers = list(model.children())
+        self.to_tensor = torchvision.transforms.ToTensor()
         self.transform = layers[0]
         self.backbone = layers[1]
     def forward(self, images, targets=None):
+        images = images.permute(0, 3, 1, 2)/255
         images, targets = self.transform(images, targets)
         features = self.backbone(images.tensors)
         f1, f2 = features["0"], features["1"]
@@ -24,4 +26,5 @@ if __name__ == "__main__":
     data = next(iter(train_loader))
     img1 = data["previmg"]
     out = model(img1)
-    print(out.shape)    
+    print(img1.shape)
+    print(out.shape)
