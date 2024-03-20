@@ -5,9 +5,9 @@ config = {
     "log":False,
     "wandb" : False,
     "paths" : {
-        "imagenetloc" : "/mnt/data/imagenet",
-        "imagenet": "/mnt/data/imagenet/ILSVRC/Data/CLS-LOC",
-        "alov": "/mnt/data/alov300pp/",
+        "imagenetloc" : "/users/local/imagenet",
+        "imagenet" : "/users/local/imagenet",
+        "alov" : "/users/local/alov300pp",
     },
     "batch_size" : 32,
     "num_workers" : 4,
