@@ -27,13 +27,12 @@ batchSize = 128  # number of samples in a batch
 kGeneratedExamplesPerImage = 10  # generate 10 synthetic samples per image
 transform = NormalizeToTensor()
 bb_params = {}
-if cfg['wandb']:
-    wandb.login()
-    wandb.init(project='goturn-pytorch', entity='jovillios', notes="testing")
-    wandb.config.update(cfg)
 
 args = None
 parser = argparse.ArgumentParser(description='GOTURN Training')
+# parse wandb
+parser.add_argument('-w', '--wandb', action='store_true', default=False,
+                    help='use wandb for logging')
 parser.add_argument('-n', '--num-batches', default=500000, type=int,
                     help='number of total batches to run')
 parser.add_argument('-lr', '--learning-rate', default=1e-5, type=float,
@@ -77,6 +76,11 @@ def main():
     print(args)
     batchSize = args.batch_size
     kSaveModel = args.save_freq
+    if args.wandb:
+        wandb.login()
+        wandb.init(project='goturnagain', entity='procom', notes="testing")
+        wandb.config.update(cfg)
+
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
     if cuda:
@@ -289,7 +293,7 @@ def train_model(model, datasets, criterion, optimizer):
                 del(train_batch)
                 st = time.time()
 
-                if cfg['wandb']:
+                if args.wandb:
                     wandb.log({'train/batch_loss': curr_loss})
 
                 if itr > 0 and itr % kSaveModel == 0:
