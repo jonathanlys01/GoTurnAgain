@@ -72,6 +72,8 @@ class FasterGTA(nn.Module):
     def __init__(self):
         super(FasterGTA, self).__init__()
         self.backbone = FasterRCNN()
+        for param in self.backbone.parameters():
+            param.requires_grad = False
         self.classifier = nn.Sequential(
                 nn.Linear(512*10*10*2, 4096),
                 nn.ReLU(inplace=True),
@@ -92,11 +94,9 @@ class FasterGTA(nn.Module):
                 m.weight.data.normal_(0, 0.005)
     def forward(self, x, y):
         x1 = self.backbone(x)
-        print(x1.shape)
-        exit()
-        x1 = x1.view(x.size(0), 256*6*6)
+        x1 = x1.view(x.size(0), 512*10*10)
         x2 = self.backbone(y)
-        x2 = x2.view(x.size(0), 256*6*6)
+        x2 = x2.view(x.size(0), 512*10*10)
         x = torch.cat((x1, x2), 1)
         x = self.classifier(x)
         return x

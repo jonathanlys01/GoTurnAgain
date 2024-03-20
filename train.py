@@ -107,7 +107,7 @@ def main():
     datasets = [imagenet, alov]
 
     # load model
-    net = model.GoNet().to(device)
+    net = model.FasterGTA()
     # summary(net, [(3, 224, 224), (3, 224, 224)])
     loss_fn = torch.nn.L1Loss(size_average=False).to(device)
 
@@ -244,6 +244,7 @@ def train_model(model, datasets, criterion, optimizer):
 
     itr = start_itr
     st = time.time()
+    model.to(device)
     while itr < args.num_batches:
 
         model.train()
