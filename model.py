@@ -1,6 +1,7 @@
 import torch
 from torchvision import models
 import torch.nn as nn
+from fasterrcnn import FasterRCNN
 
 
 class GoNet(nn.Module):
@@ -56,6 +57,43 @@ class GoNet(nn.Module):
         x1 = self.convnet(x)
         x1 = x1.view(x.size(0), 256*6*6)
         x2 = self.convnet(y)
+        x2 = x2.view(x.size(0), 256*6*6)
+        x = torch.cat((x1, x2), 1)
+        x = self.classifier(x)
+        return x
+
+def get_fasterrccnn_mobilenet_backbone():
+    model = models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True)
+    layers = list(model.children())
+    backbone = torch.nn.Sequential(*layers[:2])
+    return backbone
+
+class GoNetFasterRCNN(nn.Module):
+    def __init__(self):
+        super(GoNetFasterRCNN, self).__init__()
+        self.backbone = FasterRCNN()
+        self.classifier = nn.Sequential(
+                nn.Linear(512*10*10*2, 4096),
+                nn.ReLU(inplace=True),
+                nn.Dropout(),
+                nn.Linear(4096, 4096),
+                nn.ReLU(inplace=True),
+                nn.Dropout(),
+                nn.Linear(4096, 4096),
+                nn.ReLU(inplace=True),
+                nn.Dropout(),
+                nn.Linear(4096, 4),
+                )
+        self.weight_init()
+    def weight_init(self):
+        for m in self.classifier.modules():
+            if isinstance(m, nn.Linear):
+                m.bias.data.fill_(1)
+                m.weight.data.normal_(0, 0.005)
+    def forward(self, x, y):
+        x1 = self.backbone(x)
+        x1 = x1.view(x.size(0), 256*6*6)
+        x2 = self.backbone(y)
         x2 = x2.view(x.size(0), 256*6*6)
         x = torch.cat((x1, x2), 1)
         x = self.classifier(x)
