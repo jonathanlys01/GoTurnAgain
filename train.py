@@ -27,13 +27,12 @@ batchSize = 128  # number of samples in a batch
 kGeneratedExamplesPerImage = 10  # generate 10 synthetic samples per image
 transform = NormalizeToTensor()
 bb_params = {}
-if cfg['wandb']:
-    wandb.login()
-    wandb.init(project='goturn-pytorch', entity='jovillios', notes="testing")
-    wandb.config.update(cfg)
 
 args = None
 parser = argparse.ArgumentParser(description='GOTURN Training')
+# parse wandb
+parser.add_argument('-w', '--wandb', action='store_true', default=False,
+                    help='use wandb for logging')
 parser.add_argument('-n', '--num-batches', default=500000, type=int,
                     help='number of total batches to run')
 parser.add_argument('-lr', '--learning-rate', default=1e-5, type=float,
@@ -77,6 +76,11 @@ def main():
     print(args)
     batchSize = args.batch_size
     kSaveModel = args.save_freq
+    if args.wandb:
+        wandb.login()
+        wandb.init(project='goturnagain', entity='procom', notes="testing")
+        wandb.config.update(cfg)
+
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
     if cuda:
@@ -103,7 +107,7 @@ def main():
     datasets = [imagenet, alov]
 
     # load model
-    net = model.FasterGTA().to(device)
+    net = model.GoNet().to(device)
     # summary(net, [(3, 224, 224), (3, 224, 224)])
     loss_fn = torch.nn.L1Loss(size_average=False).to(device)
 
@@ -222,7 +226,7 @@ def train_model(model, datasets, criterion, optimizer):
             print("=> loading checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
             start_itr = checkpoint['itr']
-            model.load_state_dict(checkpoint['state_dict'])
+            model.classifier.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
             num_running_batch = checkpoint['num_running_batch']
@@ -289,10 +293,11 @@ def train_model(model, datasets, criterion, optimizer):
                 del(train_batch)
                 st = time.time()
 
-                if cfg['wandb']:
+                if args.wandb:
                     wandb.log({'train/batch_loss': curr_loss})
 
                 if itr > 0 and itr % kSaveModel == 0:
+                    print('Saving model at iteration %d' % (itr))
                     path = os.path.join(args.save_directory,
                                         'model_itr_' + str(itr) + '_loss_' +
                                         str(round(curr_loss, 3)) + '.pth.tar')
@@ -300,7 +305,7 @@ def train_model(model, datasets, criterion, optimizer):
                                      'np_rand_state': np.random.get_state(),
                                      'torch_rand_state': torch.get_rng_state(),
                                      'l1_loss': curr_loss,
-                                     'state_dict': model.state_dict(),
+                                     'state_dict': model.classifier.state_dict(),
                                      'optimizer': optimizer.state_dict(),
                                      'scheduler': scheduler.state_dict(),
                                      'num_running_batch': num_running_batch,
