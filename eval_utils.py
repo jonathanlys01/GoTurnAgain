@@ -133,10 +133,10 @@ def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32,32)):
     
     u = flow[...,0]
     v = flow[...,1]
-    # rescale to original size
-    u_mean = np.mean(u)/target_size[0] * w
-    v_mean = np.mean(v)/target_size[1] * h
-    return u_mean, v_mean
+    # compute median displacement and rescale to original image dimensions
+    u_m = np.median(u)/target_size[0] * w
+    v_m = np.median(v)/target_size[1] * h
+    return u_m, v_m
 
 if __name__ == "__main__":
     
