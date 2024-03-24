@@ -24,7 +24,7 @@ def main(path="sequences-train",
     
     if model_type == "FasterGTA":
         model = FasterGTA()
-        model.classifier.load_state_dict(torch.load(model_path))
+        model.classifier.load_state_dict(torch.load(model_path)["state_dict"])
     elif model_type == "GoNet":
         model = GoNet()
         model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu"))["state_dict"])
