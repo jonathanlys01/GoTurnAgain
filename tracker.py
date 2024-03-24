@@ -3,6 +3,7 @@ import torch
 from helper import NormalizeToTensor, Rescale, BoundingBox, crop_sample
 import numpy as np
 import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
 
 class Tracker():
     def __init__(self, model, k_context=2):
@@ -32,13 +33,20 @@ class Tracker():
         
         self.is_init = True
         
-    def step(self, image):
+    def step(self, image, show=False):
         assert self.is_init, "Tracker not initialized"
         
         prev_sample, opts_prev = crop_sample({'image': self.prev_img,
                                              'bb': self.prev_box})
         curr_sample, opts_curr = crop_sample({'image': image,
                                              'bb': self.prev_box})
+        
+        if show:
+            plt.subplot(1, 2, 1)
+            plt.imshow(prev_sample['image'])
+            plt.subplot(1, 2, 2)
+            plt.imshow(curr_sample['image'])
+            plt.show()
         
         search_region = opts_curr['search_region']
         
@@ -53,7 +61,7 @@ class Tracker():
         box = np.array(self._get_rect(sample))
 
         # update previous box and image
-        self.prev_img = image
+        self.prev_img = np.copy(image)
         self.prev_box = box
         
         return box, search_region
@@ -84,5 +92,5 @@ class Tracker():
         
         
 
-    
+
     

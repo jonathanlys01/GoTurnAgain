@@ -17,7 +17,7 @@ from tracker import Tracker
 def main(path="sequences-train",
          model_path="model.pth",
          model_type="FasterGTA",
-            show=False
+         show=False
          ):
     
     os.makedirs("results", exist_ok=True)
@@ -62,7 +62,7 @@ def main(path="sequences-train",
             
             box_gt = annotations[object_name][i]["box"]
             
-            box_c, search_region = tracker.step(img_c)
+            box_c, search_region = tracker.step(img_c, show=show)
             box_c = box_c.astype(int)        
             
             img_c = cv2.rectangle(img_c, (box_c[0], box_c[1]), (box_c[2], box_c[3]), (255, 0, 0), 2)
@@ -114,8 +114,9 @@ if __name__ == "__main__":
         parser.add_argument("--path", type=str, default="sequences-train")
         parser.add_argument("--model_path", type=str, default="pytorch_goturn.pth")
         parser.add_argument("--model_type", type=str, default="GoNet")
+        parser.add_argument("--show", "-s", action="store_true")
         
         args = parser.parse_args()
         
-        main(args.path, args.model_path, args.model_type)
+        main(args.path, args.model_path, args.model_type, args.show)
     
