@@ -9,6 +9,7 @@ class Tracker():
         
 
         self.net = model
+        self.net.eval()
         
         self.is_init = False
         
@@ -65,7 +66,8 @@ class Tracker():
         x1, x2 = sample['previmg'], sample['currimg']
         x1 = x1.unsqueeze(0).to(self.device)
         x2 = x2.unsqueeze(0).to(self.device)
-        y = self.net(x1, x2)
+        with torch.inference_mode():
+            y = self.net(x1, x2)
         bb = y.data.cpu().numpy().transpose((1, 0))
         bb = bb[:, 0]
         bbox = BoundingBox(bb[0], bb[1], bb[2], bb[3], kContext= self.scale_context)

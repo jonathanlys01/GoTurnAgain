@@ -106,6 +106,9 @@ def main(path="sequences-train",
 
 
 if __name__ == "__main__":
+    
+    # Example usage:
+    # python3 eval.py --path /users/local/sequences-train --model_path /users/local/saved_checkpoints/exp3/model_itr_300000_loss_56.81.pth.tar  --model_type FasterGTA
         
         parser = argparse.ArgumentParser()
         parser.add_argument("--path", type=str, default="sequences-train")
