@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 from eval_utils import delta_by_optical_flow
 
 class Tracker():
-    def __init__(self, model, k_context=2, optical_flow=None):
+    def __init__(self, model, k_context=2, optical_flow=None, target_size=(64, 64)):
+        self.target_size = target_size
+        
         assert optical_flow in [None, "tvl1", "ilk"], "Invalid optical flow method"
         self.optical_flow = optical_flow
 
@@ -54,7 +56,7 @@ class Tracker():
                 plt.subplot(1, 2, 2)
                 plt.imshow(temp_curr)
                 plt.show()
-            u,v = delta_by_optical_flow(temp_prev, temp_curr, mode=self.optical_flow)
+            u,v = delta_by_optical_flow(temp_prev, temp_curr, mode=self.optical_flow, target_size=self.target_size)
         else:
             u, v = 0, 0
             
