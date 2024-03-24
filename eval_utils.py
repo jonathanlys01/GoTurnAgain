@@ -112,7 +112,7 @@ def centroid_error(box1, box2):
     return np.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
     
     
-def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32, 32)):
+def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32,32)):
     """
     img1 and img2 are numpy arrays
     
@@ -121,6 +121,7 @@ def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32, 32)):
     img1 = rgb2gray(img1)
     img2 = rgb2gray(img2)
     
+    h, w = img1.shape
     img1 = resize(img1, target_size)
     img2 = resize(img2, target_size)
     
@@ -128,14 +129,15 @@ def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32, 32)):
     if mode == "tvl1":
         flow = optical_flow_tvl1(img1, img2)
     elif mode == "ilk":
-        flow = optical_flow_ilk(img1, img2)
+        flow = optical_flow_ilk(img1, img2, gaussian=True)
     else:
         raise ValueError(f"Invalid mode: {mode}")
     
     u = flow[...,0]
     v = flow[...,1]
-    u_mean = np.mean(u)
-    v_mean = np.mean(v)
+    # rescale to original size
+    u_mean = np.mean(u)/target_size[0] * w
+    v_mean = np.mean(v)/target_size[1] * h
     return u_mean, v_mean
 
 if __name__ == "__main__":

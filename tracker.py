@@ -38,17 +38,28 @@ class Tracker():
     def step(self, image, show=False):
         assert self.is_init, "Tracker not initialized"
         
-        if self.optical_flow == "tvl1":
-            u, v = delta_by_optical_flow(self.prev_img, image, mode="tvl1")
-        elif self.optical_flow == "ilk":
-            u, v = delta_by_optical_flow(self.prev_img, image, mode="ilk")
+        
+        prev_sample, opts_prev = crop_sample({'image': self.prev_img,
+                                             'bb': self.prev_box})
+        curr_sample, opts_curr = crop_sample({'image': image,
+                                             'bb': self.prev_box})
+        
+        if self.optical_flow is not None:
+            # compute optical flow of cropped images
+            temp_prev = prev_sample['image']
+            temp_curr = curr_sample['image']
+            if show:
+                plt.subplot(1, 2, 1)
+                plt.imshow(temp_prev)
+                plt.subplot(1, 2, 2)
+                plt.imshow(temp_curr)
+                plt.show()
+            u,v = delta_by_optical_flow(temp_prev, temp_curr, mode=self.optical_flow)
         else:
             u, v = 0, 0
             
         new_box = self.prev_box + np.array([u, v, u, v])
         
-        prev_sample, opts_prev = crop_sample({'image': self.prev_img,
-                                             'bb': self.prev_box})
         curr_sample, opts_curr = crop_sample({'image': image,
                                              'bb': new_box})
         
