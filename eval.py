@@ -42,9 +42,12 @@ def main(path="sequences-train",
     tracker_of = Tracker(model, optical_flow="tvl1", target_size=target_size)
     
     annotations = utils.load_sequences(path)
+    names = list(annotations.keys())
+    names.sort()
     
-    for object_name in annotations:
+    for object_name in names:
         print(object_name)
+        
     
         img1 = io.imread(annotations[object_name][0]["path"])
         
@@ -99,7 +102,7 @@ def main(path="sequences-train",
         ious_v = np.array(ious_v)
         ious_of = np.array(ious_of)
 
-        print(f"IoU v: {np.mean(ious_v):.2f} of: {np.mean(ious_of):.2f}")
+        print(f"IoU v: {np.mean(ious_v):.4f} of: {np.mean(ious_of):.4f}")
         
         centroid_errors_v = np.array(centroid_errors_v)
         centroid_errors_of = np.array(centroid_errors_of)  
@@ -109,7 +112,7 @@ def main(path="sequences-train",
         plt.plot(ious_v, label="Vanilla")
         plt.plot(ious_of, label="Optical flow")
         plt.legend()
-        plt.title(f"IoU v: {np.mean(ious_v):.2f} of: {np.mean(ious_of):.2f}")
+        plt.title(f"IoU v: {np.mean(ious_v):.4f} of: {np.mean(ious_of):.4f}")
         plt.ylim(0, 1)
         plt.xlabel("Frame")
         plt.ylabel("IoU")

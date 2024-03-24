@@ -53,8 +53,12 @@ class Tracker():
             if show:
                 plt.subplot(1, 2, 1)
                 plt.imshow(temp_prev)
+                plt.title("Previous Image")
+                plt.axis('off')
                 plt.subplot(1, 2, 2)
                 plt.imshow(temp_curr)
+                plt.title("Current Image")
+                plt.axis('off')
                 plt.show()
             u,v = delta_by_optical_flow(temp_prev, temp_curr, mode=self.optical_flow, target_size=self.target_size)
         else:
@@ -68,8 +72,15 @@ class Tracker():
         if show:
             plt.subplot(1, 2, 1)
             plt.imshow(prev_sample['image'])
+            plt.title("Previous Image")
+            plt.axis('off')
             plt.subplot(1, 2, 2)
             plt.imshow(curr_sample['image'])
+            if self.optical_flow is not None:
+                plt.title("Current Image (after optical flow)")
+            else:
+                plt.title("Current Image (no optical flow)")
+            plt.axis('off')
             plt.show()
         
         search_region = opts_curr['search_region']
