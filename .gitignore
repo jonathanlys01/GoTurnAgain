@@ -6,3 +6,4 @@ checkpoints/
 wandb/
 
 sequences-train/
+pytorch_goturn.pth

@@ -22,13 +22,13 @@ def sample_exp_two_sides(lambda_):
 
 class BoundingBox:
 
-    def __init__(self, x1, y1, x2, y2):
+    def __init__(self, x1, y1, x2, y2, kContext = 2):
 
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
-        self.kContextFactor = 2
+        self.kContextFactor = kContext
         self.kScaleFactor = 10
 
     def print_bb(self):

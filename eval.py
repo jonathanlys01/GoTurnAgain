@@ -1,94 +1,118 @@
-import os 
-import matplotlib.pyplot as plt
-from skimage import io
-import numpy as np
-import PIL.Image
+import eval_utils as utils
+import skimage.io as io
 import cv2
+import PIL
+import os
+import torch
+import argparse
+from tqdm import tqdm
+import numpy as np
+import matplotlib.pyplot as plt
 
-def main():
+from model import FasterGTA, GoNet 
+
+from tracker import Tracker
+
+
+def main(path="sequences-train",
+         model_path="model.pth",
+         model_type="FasterGTA",
+            show=False
+         ):
     
-    path = "sequences-train"
-
-    unique = set()
-
-    for filename in os.listdir(path):
-        if filename.startswith("."):
-            continue
-        name = filename.split("-")[0]
-        unique.add(name)
+    os.makedirs("results", exist_ok=True)
+    
+    if model_type == "FasterGTA":
+        model = FasterGTA()
+        model.classifier.load_state_dict(torch.load(model_path))
+    elif model_type == "GoNet":
+        model = GoNet()
+        model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu"))["state_dict"])
+    else:
+        raise ValueError("Invalid model type")
+    
+    
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    model.eval()
+    
+    tracker = Tracker(model, k_context=3)
+    
+    annotations = utils.load_sequences(path)
+    
+    for object_name in annotations:
+        print(object_name)
+    
+        img1 = io.imread(annotations[object_name][0]["path"])
         
-    print(unique)
-
-    names = {un: {"start":float("inf"),
-                "end":float("-inf"),
-                "files":[]} for un in unique}
-
-    for filename in os.listdir(path):
-        if filename.startswith("."):
-            continue
-        name, num = filename.split("-")[:2] # last is the extension
-        names[name]["files"].append(filename)
-        num = int(num.split(".")[0])
-        if num < names[name]["start"]:
-            names[name]["start"] = num
-        if num > names[name]["end"]:
-            names[name]["end"] = num
-
-    for name in names:
-        object_name = name
-    
-        img1 = io.imread(f"sequences-train/{object_name}-001.bmp")
-        h,w,c = img1.shape
+        box1 = annotations[object_name][0]["box"]
         
-        list_images = [PIL.Image.fromarray(img1)]   
-        for i in range(names[object_name]["start"], names[object_name]["end"]+1):
-            img = io.imread(f"sequences-train/{object_name}"+"-%03d.bmp" % i)
-            mask = io.imread(f"sequences-train/{object_name}"+"-%03d.png" % i)
-            indexes = np.where(mask>0)
-            box = np.array([indexes[1].min()/w, indexes[0].min()/h, indexes[1].max()/w, indexes[0].max()/h])
+        tracker.init_tracker(img1, box1)
+        
+        imgs = [img1.copy()]
+        centroid_errors = [0]
+        ious = [1]
+        
+        box_c = box1
+        
+        for i in tqdm(range(1, len(annotations[object_name]))):
+            img_c = io.imread(annotations[object_name][i]["path"])
+        
             
+            box_gt = annotations[object_name][i]["box"]
             
-            cv2.rectangle(img, (int(box[0]*w), int(box[1]*h)), (int(box[2]*w), int(box[3]*h)), (0,255,0), 2)
-            img = PIL.Image.fromarray(img)
-            list_images.append(img)
+            box_c, search_region = tracker.step(img_c)
+            box_c = box_c.astype(int)        
+            
+            img_c = cv2.rectangle(img_c, (box_c[0], box_c[1]), (box_c[2], box_c[3]), (255, 0, 0), 2)
+            img_c = cv2.rectangle(img_c, (box_gt[0], box_gt[1]), (box_gt[2], box_gt[3]), (0, 255, 0), 2)
+            
+            imgs.append(img_c)
 
-        os.makedirs("gifs", exist_ok=True)
-        make_gif(list_images, f"gifs/{object_name}.gif", duration=100)
+            ious.append(utils.iou_unit(box_c, box_gt))
+            centroid_errors.append(utils.centroid_error(box_c, box_gt))
+            
+            if show:
+                plt.imshow(search_region)
+                plt.axis("off")
+                plt.show()
+            
+        
+        ious = np.array(ious)   
+        centroid_errors = np.array(centroid_errors)
+        
+        plt.figure(figsize=(20, 10))
+        plt.subplot(2, 1, 1)
+        plt.plot(ious)
+        plt.ylim(0, 1)
+        plt.title("IoU")
+        plt.xlabel("Frame")
+        plt.ylabel("IoU")
 
-def make_gif(list_images, path, duration=100):
-    assert len(list_images) > 1, "Need at least 2 images to make a gif"
-    
-    list_images[0].save(path, save_all=True, append_images=list_images[1:], optimize=False, duration=duration, loop=0)
+        plt.subplot(2, 1, 2)
+        plt.plot(centroid_errors)
+        plt.title("Centroid error")
+        plt.xlabel("Frame")
+        plt.ylabel("Centroid error")
+        
+        plt.tight_layout()  
+        plt.savefig(f"results/{model_type}_{object_name}.png")
+        plt.close()
+   
+        imgs = [PIL.Image.fromarray(img) for img in imgs]
 
-def iou_unit(box1, box2):
-    """
-    box1 and box2 are [x1, y1, x2, y2], all values are in [0,1]    
-    """
-    
-    intersection = [max(box1[0], box2[0]), 
-                    max(box1[1], box2[1]), 
-                    min(box1[2], box2[2]), 
-                    min(box1[3], box2[3])]
-    
-    if intersection[2] < intersection[0] or intersection[3] < intersection[1]:
-        return 0
-    
-    area_intersection = (intersection[2] - intersection[0]) * (intersection[3] - intersection[1])
-    
-    area_box1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
-    area_box2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
-    
-    return area_intersection / (area_box1 + area_box2 - area_intersection)
-    # Aunion = Abox1 + Abox2 - Aintersection
-    
+        utils.make_gif(imgs, f"results/{model_type}_{object_name}.gif")     
+
 
 if __name__ == "__main__":
-    
-    main()
-    
-    
-    
-    
-    
-    
+        
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--path", type=str, default="sequences-train")
+        parser.add_argument("--model_path", type=str, default="pytorch_goturn.pth")
+        parser.add_argument("--model_type", type=str, default="GoNet")
+        
+        args = parser.parse_args()
+        
+        main(args.path, args.model_path, args.model_type)
     
