@@ -4,10 +4,12 @@ from helper import NormalizeToTensor, Rescale, BoundingBox, crop_sample
 import numpy as np
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
+from eval_utils import delta_by_optical_flow
 
 class Tracker():
-    def __init__(self, model, k_context=2):
-        
+    def __init__(self, model, k_context=2, optical_flow=None):
+        assert optical_flow in [None, "tvl1", "ilk"], "Invalid optical flow method"
+        self.optical_flow = optical_flow
 
         self.net = model
         self.net.eval()
@@ -36,10 +38,19 @@ class Tracker():
     def step(self, image, show=False):
         assert self.is_init, "Tracker not initialized"
         
+        if self.optical_flow == "tvl1":
+            u, v = delta_by_optical_flow(self.prev_img, image, mode="tvl1")
+        elif self.optical_flow == "ilk":
+            u, v = delta_by_optical_flow(self.prev_img, image, mode="ilk")
+        else:
+            u, v = 0, 0
+            
+        new_box = self.prev_box + np.array([u, v, u, v])
+        
         prev_sample, opts_prev = crop_sample({'image': self.prev_img,
                                              'bb': self.prev_box})
         curr_sample, opts_curr = crop_sample({'image': image,
-                                             'bb': self.prev_box})
+                                             'bb': new_box})
         
         if show:
             plt.subplot(1, 2, 1)

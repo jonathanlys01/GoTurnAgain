@@ -37,7 +37,8 @@ def main(path="sequences-train",
     model.to(device)
     model.eval()
     
-    tracker = Tracker(model, k_context=3)
+    tracker_vanilla = Tracker(model, optical_flow=None)
+    tracker_of = Tracker(model, optical_flow="ilk") # tvl1 or ilk
     
     annotations = utils.load_sequences(path)
     
@@ -48,13 +49,20 @@ def main(path="sequences-train",
         
         box1 = annotations[object_name][0]["box"]
         
-        tracker.init_tracker(img1, box1)
+        tracker_vanilla.init_tracker(img1, box1)
+        tracker_of.init_tracker(img1, box1)
         
         imgs = [img1.copy()]
-        centroid_errors = [0]
-        ious = [1]
         
-        box_c = box1
+        
+        centroid_errors_v = [0]
+        ious_v = [1]
+        
+        centroid_errors_of = [0]
+        ious_of = [1]
+        
+        box_c_v = box1
+        box_c_of = box1
         
         for i in tqdm(range(1, len(annotations[object_name]))):
             img_c = io.imread(annotations[object_name][i]["path"])
@@ -62,16 +70,24 @@ def main(path="sequences-train",
             
             box_gt = annotations[object_name][i]["box"]
             
-            box_c, search_region = tracker.step(img_c, show=show)
-            box_c = box_c.astype(int)        
+            box_c_v, search_region = tracker_vanilla.step(img_c, show=show)
+            box_c_v = box_c_v.astype(int)
             
-            img_c = cv2.rectangle(img_c, (box_c[0], box_c[1]), (box_c[2], box_c[3]), (255, 0, 0), 2)
-            img_c = cv2.rectangle(img_c, (box_gt[0], box_gt[1]), (box_gt[2], box_gt[3]), (0, 255, 0), 2)
+            box_c_of, _ = tracker_of.step(img_c, show=show)
+            box_c_of = box_c_of.astype(int)
+            
+            
+            img_c = cv2.rectangle(img_c, (box_c_v[0], box_c_v[1]), (box_c_v[2], box_c_v[3]), (255, 0, 0), 2) # vanilla in blue
+            img_c = cv2.rectangle(img_c, (box_c_of[0], box_c_of[1]), (box_c_of[2], box_c_of[3]), (0, 0, 255), 2) # optical flow in red
+            img_c = cv2.rectangle(img_c, (box_gt[0], box_gt[1]), (box_gt[2], box_gt[3]), (0, 255, 0), 2) # ground truth in green
             
             imgs.append(img_c)
 
-            ious.append(utils.iou_unit(box_c, box_gt))
-            centroid_errors.append(utils.centroid_error(box_c, box_gt))
+            ious_v.append(utils.iou_unit(box_c_v, box_gt))
+            ious_of.append(utils.iou_unit(box_c_of, box_gt))
+            
+            centroid_errors_v.append(utils.centroid_error(box_c_v, box_gt))
+            centroid_errors_of.append(utils.centroid_error(box_c_of, box_gt))
             
             if show:
                 plt.imshow(search_region)
@@ -79,20 +95,27 @@ def main(path="sequences-train",
                 plt.show()
             
         
-        ious = np.array(ious)   
-        centroid_errors = np.array(centroid_errors)
+        ious_v = np.array(ious_v)
+        ious_of = np.array(ious_of)
+        
+        centroid_errors_v = np.array(centroid_errors_v)
+        centroid_errors_of = np.array(centroid_errors_of)  
         
         plt.figure(figsize=(20, 10))
         plt.subplot(2, 1, 1)
-        plt.plot(ious)
+        plt.plot(ious_v, label="Vanilla")
+        plt.plot(ious_of, label="Optical flow")
+        plt.legend()
+        plt.title(f"IoU v: {np.mean(ious_v):.2f} of: {np.mean(ious_of):.2f}")
         plt.ylim(0, 1)
-        plt.title("IoU")
         plt.xlabel("Frame")
         plt.ylabel("IoU")
 
         plt.subplot(2, 1, 2)
-        plt.plot(centroid_errors)
-        plt.title("Centroid error")
+        plt.plot(centroid_errors_v, label="Vanilla")
+        plt.plot(centroid_errors_of, label="Optical flow")
+        plt.legend()
+        plt.title(f"C error v: {np.mean(centroid_errors_v):.2f} of: {np.mean(centroid_errors_of):.2f}")
         plt.xlabel("Frame")
         plt.ylabel("Centroid error")
         
