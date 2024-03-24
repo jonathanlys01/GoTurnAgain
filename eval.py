@@ -38,7 +38,8 @@ def main(path="sequences-train",
     model.eval()
     
     tracker_vanilla = Tracker(model, optical_flow=None)
-    target_size = (32, 32) if model_type == "GoNet" else (64, 64)
+    #target_size = (32, 32) if model_type == "GoNet" else (50,50)
+    target_size = (32,32)
     tracker_of = Tracker(model, optical_flow="tvl1", target_size=target_size)
     
     annotations = utils.load_sequences(path)
@@ -99,7 +100,7 @@ def main(path="sequences-train",
         ious_v = np.array(ious_v)
         ious_of = np.array(ious_of)
 
-        print(f"IoU v: {np.mean(ious_v):.2f} of: {np.mean(ious_of):.2f}")
+        print(f"IoU v: {np.mean(ious_v):.2f} / of: {np.mean(ious_of):.2f}")
         
         centroid_errors_v = np.array(centroid_errors_v)
         centroid_errors_of = np.array(centroid_errors_of)  
