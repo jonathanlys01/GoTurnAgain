@@ -38,7 +38,7 @@ def main(path="sequences-train",
     model.eval()
     
     tracker_vanilla = Tracker(model, optical_flow=None)
-    tracker_of = Tracker(model, optical_flow="ilk") # tvl1 or ilk
+    tracker_of = Tracker(model, optical_flow="tvl1") # tvl1 or ilk
     
     annotations = utils.load_sequences(path)
     

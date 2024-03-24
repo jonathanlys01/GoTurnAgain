@@ -112,22 +112,20 @@ def centroid_error(box1, box2):
     return np.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
     
     
-def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(64,64)):
+def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32,32)):
     """
     img1 and img2 are numpy arrays
     
     output is a tuple (u, v) where u and v are the displacements in the x and y directions
     """
-    img1 = rgb2gray(img1)
-    img2 = rgb2gray(img2)
     
-    h, w = img1.shape
+    h, w, c = img1.shape
     img1 = resize(img1, target_size)
     img2 = resize(img2, target_size)
     
     
     if mode == "tvl1":
-        flow = optical_flow_tvl1(img1, img2)
+        flow = optical_flow_tvl1(img1, img2, prefilter=True)
     elif mode == "ilk":
         flow = optical_flow_ilk(img1, img2, gaussian=True)
     else:
