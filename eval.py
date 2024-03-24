@@ -97,6 +97,8 @@ def main(path="sequences-train",
         
         ious_v = np.array(ious_v)
         ious_of = np.array(ious_of)
+
+        print(f"IoU v: {np.mean(ious_v):.2f} of: {np.mean(ious_of):.2f}")
         
         centroid_errors_v = np.array(centroid_errors_v)
         centroid_errors_of = np.array(centroid_errors_of)  

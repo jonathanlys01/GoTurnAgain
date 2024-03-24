@@ -112,7 +112,7 @@ def centroid_error(box1, box2):
     return np.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
     
     
-def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(32,32)):
+def delta_by_optical_flow(img1, img2, mode="tvl1", target_size=(64,64)):
     """
     img1 and img2 are numpy arrays
     
