@@ -1,13 +1,31 @@
 # GoTurnAgain
 
-<img src="gifs/bag.gif" width=100%>
+Reimplementation of the GoTurn model from the paper "Learning to Track at 100 FPS with Deep Regression Networks" by David Held, Sebastian Thrun, Silvio Savarese
 
-<img src="gifs/bear.gif" width=100%>
+We changed the pretrained network and integrated optical flow to improve the tracking performance.
 
-<img src="gifs/book.gif" width=100%>
+Here is the original paper: https://arxiv.org/abs/1604.01802
 
-<img src="gifs/camel.gif" width=100%>
+# Usage
 
-<img src="gifs/rhino.gif" width=100%>
+## Training
+Run the `train.py` script to train the model.
 
-<img src="gifs/swan.gif" width=100%>
+## Eval 
+Run the `eval.py` script to evaluate the model.
+
+For a pretrained checkpont of the original model, download the weights from the PyGOTURN repository.
+
+# Results
+
+We measured the IoU and the centroid error for the original model and our model.
+
+<img src="results/GoNet_bag.gif" width=100%>
+
+<img src="results/GoNet_bag.png" width=100%>
+
+--- 
+
+<img src="results/FasterGTA_bag.gif" width=100%>
+
+<img src="results/FasterGTA_bag.png" width=100%>
