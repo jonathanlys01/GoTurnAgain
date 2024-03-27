@@ -104,13 +104,14 @@ def main(path="sequences-train",
         ious_of = np.array(ious_of)
 
         print(f"IoU v: {np.mean(ious_v):.4f} of: {np.mean(ious_of):.4f}")
+        print(f"C error v: {np.mean(centroid_errors_v):.2f} of: {np.mean(centroid_errors_of):.2f}")
         
         centroid_errors_v = np.array(centroid_errors_v)
         centroid_errors_of = np.array(centroid_errors_of)
         
         os.makedirs("metrics", exist_ok=True)
-        np.savez(f"metrics/{model_type}_va_{object_name}.npz", ious=ious_v,  centroid_errors=centroid_errors_v)
-        np.savez(f"metrics/{model_type}_of_{object_name}.npz", ious=ious_of, centroid_errors=centroid_errors_of)
+        np.savez(f"metrics/team8-{object_name}_{model_type}_v.npz", ious_v=ious_v, centroid_errors_v=centroid_errors_v)
+        np.savez(f"metrics/team8-{object_name}_{model_type}_of.npz", ious_of=ious_of, centroid_errors_of=centroid_errors_of)
         
         plt.figure(figsize=(20, 10))
         plt.subplot(2, 1, 1)
