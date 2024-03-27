@@ -61,11 +61,11 @@ def main(path="sequences-train",
         imgs = [img1.copy()]
         
         
-        centroid_errors_v = [0]
-        ious_v = [1]
+        centroid_errors_v = []
+        ious_v = []
         
-        centroid_errors_of = [0]
-        ious_of = [1]
+        centroid_errors_of = []
+        ious_of = []
         
         box_c_v = box1
         box_c_of = box1
@@ -113,7 +113,7 @@ def main(path="sequences-train",
         os.makedirs("metrics", exist_ok=True)
         np.savez(f"metrics/team8-{object_name}_{model_type}_v.npz", ious_v=ious_v, centroid_errors_v=centroid_errors_v)
         np.savez(f"metrics/team8-{object_name}_{model_type}_of.npz", ious_of=ious_of, centroid_errors_of=centroid_errors_of)
-        np.save(f"metrics/team8-{object_name}.npy", centroid_errors_v)
+        np.save(f"metrics/team8-{object_name}-centroids.npy", centroid_errors_v)
         
         plt.figure(figsize=(20, 10))
         plt.subplot(2, 1, 1)
