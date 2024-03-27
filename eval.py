@@ -17,7 +17,7 @@ from tracker import Tracker
 def main(path="sequences-train",
          model_path="model.pth",
          model_type="FasterGTA",
-         show=False
+         show=False,
          target_size=32
          ):
     
