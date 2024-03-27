@@ -41,7 +41,7 @@ def main(path="sequences-train",
     tracker_vanilla = Tracker(model, optical_flow=None)
     #target_size = (32, 32) if model_type == "GoNet" else (50,50)
     target_size = (target_size, target_size)
-    tracker_of = Tracker(model, optical_flow="tvl1", target_size=target_size)
+    tracker_of = Tracker(model, optical_flow="tvl1", target_size=target_size, k_context = 1.2)
     
     annotations = utils.load_sequences(path)
     names = list(annotations.keys())
