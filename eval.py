@@ -18,6 +18,7 @@ def main(path="sequences-train",
          model_path="model.pth",
          model_type="FasterGTA",
          show=False
+         target_size=32
          ):
     
     os.makedirs("results", exist_ok=True)
@@ -39,7 +40,7 @@ def main(path="sequences-train",
     
     tracker_vanilla = Tracker(model, optical_flow=None)
     #target_size = (32, 32) if model_type == "GoNet" else (50,50)
-    target_size = (32,32)
+    target_size = (target_size, target_size)
     tracker_of = Tracker(model, optical_flow="tvl1", target_size=target_size)
     
     annotations = utils.load_sequences(path)
@@ -150,8 +151,9 @@ if __name__ == "__main__":
         parser.add_argument("--model_path", type=str, default="pytorch_goturn.pth")
         parser.add_argument("--model_type", type=str, default="GoNet")
         parser.add_argument("--show", "-s", action="store_true")
+        parser.add_argument("--target_size", "-t", type=int, default=32)
         
         args = parser.parse_args()
         
-        main(args.path, args.model_path, args.model_type, args.show)
+        main(args.path, args.model_path, args.model_type, args.show, args.target_size)
     
