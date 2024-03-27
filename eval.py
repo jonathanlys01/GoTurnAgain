@@ -113,6 +113,7 @@ def main(path="sequences-train",
         os.makedirs("metrics", exist_ok=True)
         np.savez(f"metrics/team8-{object_name}_{model_type}_v.npz", ious_v=ious_v, centroid_errors_v=centroid_errors_v)
         np.savez(f"metrics/team8-{object_name}_{model_type}_of.npz", ious_of=ious_of, centroid_errors_of=centroid_errors_of)
+        np.save(f"metrics/team8-{object_name}.npy", centroid_errors_v)
         
         plt.figure(figsize=(20, 10))
         plt.subplot(2, 1, 1)
